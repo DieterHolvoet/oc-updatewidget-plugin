@@ -1,0 +1,34 @@
+<?php if (count($plugin['newVersions'])): ?>
+<span class="status-icon warning"><i class="icon-exclamation"></i></span>
+<a class="status-text warning" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
+<span class="status-label link danger">
+        <?= e(trans('Update available!')) ?>
+    <a
+            href="javascript:;"
+            data-request="<?= $this->getEventHandler('onUpdatePlugin') ?>"
+            data-request-data="id: '<?= e($plugin['data']['id']) ?>'">
+            <b><?= e(trans('Update now.')) ?></b>
+        </a>
+    </span>
+
+<ul>
+    <?php foreach ($plugin['newVersions'] as $version => $changes): ?>
+    <li><b><?= e($version) ?></b> <?= e(is_array($changes) ? $changes[0] : $changes) ?></li>
+    <?php endforeach ?>
+</ul>
+
+<?php elseif (isset($plugin['data']['isUpdateSuccess']) && $plugin['data']['isUpdateSuccess']): ?>
+<span class="status-icon success"><i class="icon-check"></i></span>
+<a class="status-text success" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
+<span class="status-label link success"><?= e(trans('Update successful!')) ?></span>
+
+<?php elseif (isset($plugin['data']['isUpdateSuccess']) && !$plugin['data']['isUpdateSuccess']): ?>
+<span class="status-icon danger"><i class="icon-ban"></i></span>
+<a class="status-text danger" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
+<span class="status-label link danger"><?= e(trans('Update failed.')) ?></span>
+
+<?php else: ?>
+<span class="status-icon"><i class="icon-info"></i></span>
+<a class="status-text" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
+<span class="status-label link"><?= e(trans('Plugin up to date.')) ?></span>
+<?php endif ?>
