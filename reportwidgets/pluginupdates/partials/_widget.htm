@@ -4,9 +4,17 @@
         <ul>
             <?php foreach ($plugins as $id => $plugin): ?>
             <li id="plugin-updates-<?= e($plugin['data']['safeId']) ?>">
-            <?= $this->makePartial('plugin', compact('plugin')) ?>
+                <?= $this->makePartial('plugin', compact('plugin')) ?>
             </li>
             <?php endforeach ?>
+            <?php if (empty($plugins)): ?>
+            <li>
+                <span class="status-icon success"><i class="icon-check"></i></span>
+                <span class="status-text success">
+                    <?= e(trans('dieterholvoet.updatewidget::strings.no_updates_available')) ?>
+                </span>
+            </li>
+            <?php endif; ?>
         </ul>
     </div>
 </div>

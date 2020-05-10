@@ -1,0 +1,10 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    show_all:
+        type: switch
+        label: dieterholvoet.updatewidget::fields.show_all.label
+        comment: dieterholvoet.updatewidget::fields.show_all.description
+        default: true

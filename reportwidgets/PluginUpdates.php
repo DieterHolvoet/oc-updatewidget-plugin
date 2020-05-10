@@ -4,6 +4,7 @@ namespace DieterHolvoet\UpdateWidget\ReportWidgets;
 
 use Backend\Classes\ReportWidgetBase;
 use Backend\Facades\Backend;
+use DieterHolvoet\UpdateWidget\Models\Settings;
 use System\Classes\PluginManager;
 use System\Classes\VersionManager;
 
@@ -15,11 +16,14 @@ class PluginUpdates extends ReportWidgetBase
     protected $pluginManager;
     /** @var VersionManager */
     protected $versionManager;
+    /** @var Settings */
+    protected $settings;
 
     public function init(): void
     {
         $this->pluginManager = PluginManager::instance();
         $this->versionManager = VersionManager::instance();
+        $this->settings = Settings::instance();
     }
 
     public function render(): string
@@ -67,7 +71,7 @@ class PluginUpdates extends ReportWidgetBase
 
     protected function loadWidgetData(): void
     {
-        $plugins = $this->pluginManager->getPlugins();
+        $plugins = $this->getPlugins();
 
         $this->vars['plugins'] = array_map(function ($id) {
             return $this->getPluginUpdateInfo($id);
@@ -95,5 +99,22 @@ class PluginUpdates extends ReportWidgetBase
                 ]
             ),
         ];
+    }
+
+    protected function getPlugins(): array
+    {
+        $plugins = $this->pluginManager->getPlugins();
+
+        if ($this->settings->show_all) {
+            return $plugins;
+        }
+
+        foreach (array_keys($plugins) as $id) {
+            if (empty($this->versionManager->listNewVersions($id))) {
+                unset($plugins[$id]);
+            }
+        }
+
+        return $plugins;
     }
 }

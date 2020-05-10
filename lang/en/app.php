@@ -6,6 +6,7 @@ return [
     'settings' => 'Manage settings related to the Uptime Robot plugin.',
     'permission' => [
         'view_widget' => 'View dashboard widget',
+        'access_settings' => 'Manage settings',
     ],
     'widget' => [
         'plugin_updates' => 'Plugin updates',
