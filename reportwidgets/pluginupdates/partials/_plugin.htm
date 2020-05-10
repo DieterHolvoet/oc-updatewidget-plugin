@@ -1,34 +1,40 @@
-<?php if (count($plugin['newVersions'])): ?>
+<?php if (count($plugin['updates'])): ?>
 <span class="status-icon warning"><i class="icon-exclamation"></i></span>
-<a class="status-text warning" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
+<a class="status-text warning" href="<?= e($plugin['url']) ?>"><?= e(trans($plugin['name'])) ?></a>
 <span class="status-label link danger">
-        <?= e(trans('Update available!')) ?>
-    <a
+    <?= e(trans('dieterholvoet.updatewidget::strings.update_available')) ?>
+    <?php if ($plugin['hasLocalUpdates']): ?>
+        <a
             href="javascript:;"
             data-request="<?= $this->getEventHandler('onUpdatePlugin') ?>"
-            data-request-data="id: '<?= e($plugin['data']['id']) ?>'">
-            <b><?= e(trans('Update now.')) ?></b>
+            data-request-data="id: '<?= e($plugin['id']) ?>'">
+            <b><?= e(trans('dieterholvoet.updatewidget::strings.update_now')) ?></b>
         </a>
-    </span>
+    <?php else: ?>
+        <a href="<?= e($updatesPage) ?>">
+            <b><?= e(trans('dieterholvoet.updatewidget::strings.more_information')) ?></b>
+        </a>
+    <?php endif; ?>
+</span>
 
 <ul>
-    <?php foreach ($plugin['newVersions'] as $version => $changes): ?>
-    <li><b><?= e($version) ?></b> <?= e(is_array($changes) ? $changes[0] : $changes) ?></li>
+    <?php foreach ($plugin['updates'] as $version => $description): ?>
+    <li><b><?= e($version) ?></b> <?= e($description) ?></li>
     <?php endforeach ?>
 </ul>
 
-<?php elseif (isset($plugin['data']['isUpdateSuccess']) && $plugin['data']['isUpdateSuccess']): ?>
+<?php elseif (isset($plugin['isUpdateSuccess']) && $plugin['isUpdateSuccess']): ?>
 <span class="status-icon success"><i class="icon-check"></i></span>
-<a class="status-text success" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
-<span class="status-label link success"><?= e(trans('Update successful!')) ?></span>
+<a class="status-text success" href="<?= e($plugin['url']) ?>"><?= e(trans($plugin['name'])) ?></a>
+<span class="status-label link success"><?= e(trans('dieterholvoet.updatewidget::strings.update_successful')) ?></span>
 
-<?php elseif (isset($plugin['data']['isUpdateSuccess']) && !$plugin['data']['isUpdateSuccess']): ?>
+<?php elseif (isset($plugin['isUpdateSuccess']) && !$plugin['isUpdateSuccess']): ?>
 <span class="status-icon danger"><i class="icon-ban"></i></span>
-<a class="status-text danger" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
-<span class="status-label link danger"><?= e(trans('Update failed.')) ?></span>
+<a class="status-text danger" href="<?= e($plugin['url']) ?>"><?= e(trans($plugin['name'])) ?></a>
+<span class="status-label link danger"><?= e(trans('dieterholvoet.updatewidget::strings.update_failed')) ?></span>
 
 <?php else: ?>
 <span class="status-icon"><i class="icon-info"></i></span>
-<a class="status-text" href="<?= e($plugin['data']['url']) ?>"><?= e(trans($plugin['data']['name'])) ?></a>
-<span class="status-label link"><?= e(trans('Plugin up to date.')) ?></span>
+<a class="status-text" href="<?= e($plugin['url']) ?>"><?= e(trans($plugin['name'])) ?></a>
+<span class="status-label link"><?= e(trans('dieterholvoet.updatewidget::strings.plugin_up_to_date')) ?></span>
 <?php endif ?>

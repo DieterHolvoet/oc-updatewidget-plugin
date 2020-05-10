@@ -6,6 +6,7 @@ use Backend\Classes\ReportWidgetBase;
 use Backend\Facades\Backend;
 use DieterHolvoet\UpdateWidget\Models\Settings;
 use System\Classes\PluginManager;
+use System\Classes\UpdateManager;
 use System\Classes\VersionManager;
 
 class PluginUpdates extends ReportWidgetBase
@@ -16,18 +17,28 @@ class PluginUpdates extends ReportWidgetBase
     protected $pluginManager;
     /** @var VersionManager */
     protected $versionManager;
+    /** @var UpdateManager */
+    protected $updateManager;
     /** @var Settings */
     protected $settings;
+
+    /** @var array */
+    protected $updateList;
 
     public function init(): void
     {
         $this->pluginManager = PluginManager::instance();
         $this->versionManager = VersionManager::instance();
+        $this->updateManager = UpdateManager::instance();
         $this->settings = Settings::instance();
+
+        $this->updateList = $this->updateManager->requestUpdateList();
     }
 
     public function render(): string
     {
+        $this->vars['plugins'] = [];
+
         try {
             $this->loadWidgetData();
         } catch (\Exception $ex) {
@@ -65,56 +76,78 @@ class PluginUpdates extends ReportWidgetBase
         }
 
         return [
-            "#plugin-updates-{$this->vars['plugin']['data']['safeId']}" => $this->makePartial('plugin')
+            "#plugin-updates-{$this->vars['plugin']['safeId']}" => $this->makePartial('plugin')
         ];
     }
 
     protected function loadWidgetData(): void
     {
-        $plugins = $this->getPlugins();
-
-        $this->vars['plugins'] = array_map(function ($id) {
-            return $this->getPluginUpdateInfo($id);
-        }, array_keys($plugins));
+        $this->vars['plugins'] = $this->getPlugins();
+        $this->vars['updatesPage'] = Backend::url('system/updates');
     }
 
     protected function loadPluginData(string $id, bool $isUpdateSuccess): void
     {
-        $info = $this->getPluginUpdateInfo($id);
-        $info['data']['isUpdateSuccess'] = $isUpdateSuccess;
+        $info = $this->toInfoArray($id);
+        $info['isUpdateSuccess'] = $isUpdateSuccess;
 
         $this->vars['plugin'] = $info;
     }
 
-    protected function getPluginUpdateInfo(string $id): array
-    {
-        return [
-            'newVersions' => $this->versionManager->listNewVersions($id),
-            'data' => array_merge(
-                $this->pluginManager->getPlugins()[$id]->pluginDetails(),
-                [
-                    'id' => $id,
-                    'safeId' => str_replace('.', '-', $id),
-                    'url' => Backend::url('system/updates/details/' . strtolower(str_replace('.', '-', $id))),
-                ]
-            ),
-        ];
-    }
-
     protected function getPlugins(): array
     {
-        $plugins = $this->pluginManager->getPlugins();
-
-        if ($this->settings->show_all) {
-            return $plugins;
+        foreach ($this->pluginManager->getPlugins() as $id => $plugin) {
+            $plugins[$id] = $this->toInfoArray($id, $plugin->pluginDetails());
         }
 
-        foreach (array_keys($plugins) as $id) {
-            if (empty($this->versionManager->listNewVersions($id))) {
-                unset($plugins[$id]);
-            }
+        if (!$this->settings->show_all) {
+            $plugins = array_filter(
+                $plugins,
+                static function (array $info) {
+                    return !empty($info['updates']);
+                }
+            );
         }
 
         return $plugins;
+    }
+
+    protected function toInfoArray(string $id, array $info = []): array
+    {
+        if (empty($info)) {
+            $plugins = $this->pluginManager->getPlugins();
+            $info = $plugins[$id]->pluginDetails();
+        }
+
+        if ($localUpdates = $this->versionManager->listNewVersions($id)) {
+            $updates = $localUpdates;
+        } else {
+            $updates = $this->updateList['plugins'][$id]['updates'] ?? [];
+        }
+
+        foreach ($updates as &$description) {
+            if (is_array($description)) {
+                $lines = array_map(static function (string $line) {
+                    return str_finish($line, '.');
+                }, $description);
+                $description = implode(' ', $lines);
+            }
+
+            if (strpos($description, '!!!') !== false) {
+                $description = str_replace('!!!', '', $description);
+            }
+        }
+
+        $safeId = str_replace('.', '-', $id);
+        $safeId = strtolower($safeId);
+
+        return [
+            'id' => $id,
+            'safeId' => $safeId,
+            'name' => $info['name'],
+            'url' => Backend::url('system/updates/details/' . $safeId),
+            'updates' => $updates,
+            'hasLocalUpdates' => !empty($localUpdates),
+        ];
     }
 }
